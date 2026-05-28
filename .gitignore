@@ -1,0 +1,14 @@
+# Credentials / environment
+.env
+.env.local
+
+# Build outputs
+dist/
+.next/
+
+# Dependencies & tooling
+node_modules/
+.turbo/
+
+# OS
+.DS_Store
