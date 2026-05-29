@@ -1,7 +1,7 @@
 # Datos iniciales de Chihuahueños S.A. de C.V.
 # Uso: .\scripts\seed-prueba.ps1
 #
-# Crea las 4 rutas obligatorias del proyecto, un viaje por ruta
+# Crea las 4 rutas obligatorias del proyecto (si faltan), un viaje por ruta
 # y cuentas de prueba con contraseñas hasheadas (bcrypt).
 
 $ErrorActionPreference = "Stop"
@@ -42,12 +42,13 @@ function Get-BcryptHash([string]$password) {
 }
 
 function New-Ruta([string]$origen, [string]$destino) {
-  $body = @{ origen = $origen; destino = $destino } | ConvertTo-Json
+  $body = @{ origen = $origen; destino = $destino } | ConvertTo-Json -Compress
   return Invoke-RestMethod `
     -Uri "http://localhost:3000/api/rutas" `
     -Method Post `
     -Headers $headers `
-    -Body $body
+    -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) `
+    -ContentType "application/json; charset=utf-8"
 }
 
 function New-Viaje(
@@ -62,13 +63,23 @@ function New-Viaje(
     duracion          = $duracion
     precio_boleto     = $precio
     capacidad         = 40
-  } | ConvertTo-Json
+  } | ConvertTo-Json -Compress
 
   return Invoke-RestMethod `
     -Uri "http://localhost:3000/api/viajes" `
     -Method Post `
     -Headers $headers `
-    -Body $body
+    -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) `
+    -ContentType "application/json; charset=utf-8"
+}
+
+function Test-RutaProgramada([object[]]$viajes, [string]$origen, [string]$destino) {
+  foreach ($viaje in $viajes) {
+    if ($viaje.ruta.origen -eq $origen -and $viaje.ruta.destino -eq $destino) {
+      return $true
+    }
+  }
+  return $false
 }
 
 Wait-Backend
@@ -89,7 +100,9 @@ ON CONFLICT (email) DO UPDATE SET
 "@
 docker exec -i chihuahuenos-postgres psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB -c $usuarioSql | Out-Null
 
-Write-Host "Creando rutas obligatorias..."
+Write-Host "Verificando rutas obligatorias del documento..."
+$viajesActuales = @(Invoke-RestMethod -Uri "http://localhost:3000/api/viajes" -Method Get)
+
 $rutasDef = @(
   @{ Origen = "Oaxaca"; Destino = "Puebla"; Duracion = 480; Precio = 650.00; Dias = 2 },
   @{ Origen = "Chihuahua"; Destino = "Nuevo León"; Duracion = 720; Precio = 950.00; Dias = 3 },
@@ -100,16 +113,21 @@ $rutasDef = @(
 $viajesCreados = @()
 
 foreach ($def in $rutasDef) {
+  if (Test-RutaProgramada -viajes $viajesActuales -origen $def.Origen -destino $def.Destino) {
+    Write-Host "  Ya programada: $($def.Origen) -> $($def.Destino)" -ForegroundColor Yellow
+    continue
+  }
+
   $ruta = New-Ruta -origen $def.Origen -destino $def.Destino
   $fecha = (Get-Date).Date.AddDays($def.Dias).AddHours(8)
   $viaje = New-Viaje -rutaId $ruta.id -fechaInicio $fecha -duracion $def.Duracion -precio $def.Precio
   $viajesCreados += [PSCustomObject]@{
-    Ruta  = "$($ruta.origen) -> $($ruta.destino)"
-    Viaje = $viaje.id
+    Ruta   = "$($ruta.origen) -> $($ruta.destino)"
+    Viaje  = $viaje.id
     Salida = $fecha.ToString("yyyy-MM-dd HH:mm")
     Precio = $def.Precio
   }
-  Write-Host "  $($ruta.origen) -> $($ruta.destino) (viaje #$($viaje.id))"
+  Write-Host "  Creada: $($ruta.origen) -> $($ruta.destino) (viaje #$($viaje.id))" -ForegroundColor Green
 }
 
 Write-Host ""
@@ -117,14 +135,17 @@ Write-Host "Datos iniciales listos:" -ForegroundColor Green
 Write-Host ""
 Write-Host "Usuarios de prueba:"
 Write-Host "  Pasajero: prueba@chihuahuenos.mx / prueba123"
-Write-Host "  Admin:    admin@chihuahuenos.mx / admin123  (operaciones de carga vía x-api-key)"
+Write-Host "  Admin:    admin@chihuahuenos.mx / admin123"
 Write-Host ""
-Write-Host "Viajes creados:"
-$viajesCreados | Format-Table -AutoSize
+
+if ($viajesCreados.Count -gt 0) {
+  Write-Host "Viajes nuevos creados:"
+  $viajesCreados | Format-Table -AutoSize
+} else {
+  Write-Host "Las 4 rutas del documento ya estaban programadas."
+}
+
 Write-Host ""
 Write-Host "Abre en el navegador:" -ForegroundColor Cyan
 Write-Host "  Inicio:     http://localhost:3001"
-Write-Host "  Login:      http://localhost:3001/login"
 Write-Host "  Cartelera:  http://localhost:3001/dashboard"
-Write-Host ""
-Write-Host "Para crear rutas o viajes adicionales, usa la API con el header x-api-key." -ForegroundColor Yellow

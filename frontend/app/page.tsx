@@ -47,7 +47,7 @@ function buscarViaje(
 
 export default async function Home() {
   const response = await fetch(`${API_URL}/viajes`, {
-    next: { revalidate: 60 },
+    cache: 'no-store',
   });
 
   const viajes = response.ok

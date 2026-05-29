@@ -25,10 +25,8 @@ export default function MenuCuenta({ autenticado }: MenuCuentaProps) {
 
   return (
     <Dropdown>
-      <Dropdown.Trigger>
-        <Button size="sm" variant="secondary">
-          Mi cuenta
-        </Button>
+      <Dropdown.Trigger className="inline-flex h-8 items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-900 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50">
+        Mi cuenta
       </Dropdown.Trigger>
 
       <Dropdown.Popover placement="bottom end">

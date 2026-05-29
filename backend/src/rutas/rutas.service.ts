@@ -15,4 +15,10 @@ export class RutasService {
     const ruta = this.rutaRepository.create(dto);
     return this.rutaRepository.save(ruta);
   }
+
+  async findAll(): Promise<RutaEntity[]> {
+    return this.rutaRepository.find({
+      order: { id: 'ASC' },
+    });
+  }
 }
