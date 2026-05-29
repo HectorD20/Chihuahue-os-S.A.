@@ -1,4 +1,4 @@
-export type RolUsuario = 'CLIENTE' | 'ADMIN';
+export type RolUsuario = 'PASAJERO' | 'ADMIN';
 
 export type EstadoBoleto = 'DISPONIBLE' | 'RESERVADO' | 'COMPRADO';
 
@@ -7,7 +7,7 @@ export interface Usuario {
   nombre: string;
   email: string;
   identificacion_url?: string;
-  rol: RolUsuario;
+  role: RolUsuario;
 }
 
 export interface Ruta {
@@ -33,4 +33,16 @@ export interface Boleto {
   estado: EstadoBoleto;
   token_reserva?: string;
   bloqueado_hasta?: string;
+}
+
+export interface PerfilUsuario {
+  id: string;
+  nombre: string;
+  email: string;
+  role: RolUsuario;
+  identificacion_url?: string | null;
+}
+
+export interface BoletoCompra extends Boleto {
+  viaje?: Viaje & { ruta?: Ruta };
 }

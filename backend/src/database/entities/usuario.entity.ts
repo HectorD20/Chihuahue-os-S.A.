@@ -2,7 +2,7 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BoletoEntity } from '@/database/entities/boleto.entity';
 
 export enum RolUsuario {
-  CLIENTE = 'CLIENTE',
+  PASAJERO = 'PASAJERO',
   ADMIN = 'ADMIN',
 }
 
@@ -23,8 +23,8 @@ export class UsuarioEntity {
   @Column({ name: 'identificacion_url', type: 'varchar', nullable: true })
   identificacion_url: string | null;
 
-  @Column({ type: 'enum', enum: RolUsuario, default: RolUsuario.CLIENTE })
-  rol: RolUsuario;
+  @Column({ type: 'enum', enum: RolUsuario, default: RolUsuario.PASAJERO })
+  role: RolUsuario;
 
   @OneToMany(() => BoletoEntity, (boleto) => boleto.usuario)
   boletos: BoletoEntity[];

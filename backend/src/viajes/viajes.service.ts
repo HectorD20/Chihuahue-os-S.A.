@@ -23,6 +23,13 @@ export class ViajesService {
     private readonly dataSource: DataSource,
   ) {}
 
+  async findAll(): Promise<ViajeEntity[]> {
+    return this.viajeRepository.find({
+      relations: { ruta: true },
+      order: { fecha_hora_inicio: 'ASC' },
+    });
+  }
+
   async create(dto: CreateViajeDto): Promise<ViajeEntity> {
     const ruta = await this.rutaRepository.findOne({
       where: { id: dto.ruta_id },

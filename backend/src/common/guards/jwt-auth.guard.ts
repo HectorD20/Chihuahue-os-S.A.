@@ -4,15 +4,14 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { verify } from 'jsonwebtoken';
+import { JwtService } from '@nestjs/jwt';
+import { JwtPayload } from '@/auth/interfaces/jwt-payload.interface';
 import { AuthenticatedRequest } from '@/common/interfaces/authenticated-request.interface';
-
-interface JwtPayload {
-  sub: string;
-}
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
+  constructor(private readonly jwtService: JwtService) {}
+
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const authHeader = request.headers.authorization;
@@ -22,15 +21,18 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     const token = authHeader.slice(7);
-    const secret = process.env.JWT_SECRET;
 
-    if (!secret) {
+    if (!process.env.JWT_SECRET) {
       throw new UnauthorizedException('Configuración JWT inválida');
     }
 
     try {
-      const payload = verify(token, secret) as JwtPayload;
-      request.user = { id: payload.sub };
+      const payload = this.jwtService.verify<JwtPayload>(token);
+      request.user = {
+        id: payload.sub,
+        email: payload.email,
+        role: payload.role,
+      };
       return true;
     } catch {
       throw new UnauthorizedException('Token ausente o inválido');

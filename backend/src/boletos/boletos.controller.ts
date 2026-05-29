@@ -12,7 +12,6 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentUserId } from '@/common/decorators/current-user-id.decorator';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { MockAuthGuard } from '@/common/guards/mock-auth.guard';
 import { BoletosService } from '@/boletos/boletos.service';
 import { ConfirmarBoletoDto } from '@/boletos/dto/confirmar-boleto.dto';
 
@@ -56,7 +55,7 @@ export class BoletosController {
   }
 
   @Post(':id/reservar')
-  @UseGuards(MockAuthGuard)
+  @UseGuards(JwtAuthGuard)
   reservar(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUserId() usuarioId: string,

@@ -1,65 +1,196 @@
-import Image from "next/image";
+import Link from 'next/link';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@heroui/react';
+import { API_URL } from '@/constants';
+import type { Ruta, Viaje } from '@/entities';
 
-export default function Home() {
+const rutasDestacadas = [
+  { origen: 'Oaxaca', destino: 'Puebla' },
+  { origen: 'Chihuahua', destino: 'Nuevo León' },
+  { origen: 'Baja California Norte', destino: 'Baja California Sur' },
+  { origen: 'Chihuahua', destino: 'CDMX' },
+];
+
+type ViajeConRuta = Viaje & { ruta?: Ruta };
+
+function formatearFecha(fecha: string): string {
+  return new Intl.DateTimeFormat('es-MX', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(fecha));
+}
+
+function formatearPrecio(precio: number | string): string {
+  const valor = typeof precio === 'string' ? parseFloat(precio) : precio;
+
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+  }).format(valor);
+}
+
+function buscarViaje(
+  viajes: ViajeConRuta[],
+  origen: string,
+  destino: string,
+): ViajeConRuta | undefined {
+  return viajes.find(
+    (viaje) =>
+      viaje.ruta?.origen === origen && viaje.ruta?.destino === destino,
+  );
+}
+
+export default async function Home() {
+  const response = await fetch(`${API_URL}/viajes`, {
+    next: { revalidate: 60 },
+  });
+
+  const viajes = response.ok
+    ? ((await response.json()) as ViajeConRuta[])
+    : [];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="flex flex-1 flex-col">
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-800 to-blue-950 px-6 py-20 text-white">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
+          <div className="flex flex-col gap-4">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-200">
+              Transporte interestatal
+            </p>
+            <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">
+              Chihuahueños S.A. de C.V.
+            </h1>
+            <p className="max-w-2xl text-lg text-blue-100">
+              Compra boletos de autobús entre estados con selección de asientos
+              en tiempo real y reserva segura mientras completas tu compra.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/dashboard"
+              className="inline-flex h-12 min-w-44 items-center justify-center rounded-xl bg-white px-6 text-base font-semibold text-blue-800 transition-colors hover:bg-blue-50"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+              Ver cartelera
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-16">
+        <header className="flex flex-col gap-2">
+          <h2 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+            Rutas disponibles
+          </h2>
+          <p className="text-zinc-600 dark:text-zinc-400">
+            Selecciona una ruta para ver horarios y comprar boletos.
           </p>
+        </header>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {rutasDestacadas.map((ruta) => {
+            const viaje = buscarViaje(viajes, ruta.origen, ruta.destino);
+
+            return (
+              <Card key={`${ruta.origen}-${ruta.destino}`} className="h-full">
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    {ruta.origen} → {ruta.destino}
+                  </CardTitle>
+                </CardHeader>
+
+                <CardContent className="flex flex-col gap-3">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                    Autobuses con 40 asientos, reserva temporal de 10 minutos y
+                    verificación de identidad al confirmar la compra.
+                  </p>
+
+                  {viaje ? (
+                    <>
+                      <div>
+                        <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                          Próxima salida
+                        </p>
+                        <p className="text-base text-zinc-900 dark:text-zinc-50">
+                          {formatearFecha(viaje.fecha_hora_inicio)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                          Precio desde
+                        </p>
+                        <p className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+                          {formatearPrecio(viaje.precio_boleto)}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-sm text-amber-700 dark:text-amber-400">
+                      No hay viajes programados por el momento.
+                    </p>
+                  )}
+                </CardContent>
+
+                <CardFooter>
+                  {viaje ? (
+                    <Link
+                      href={`/dashboard/viajes/${viaje.id}`}
+                      className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                    >
+                      Comprar boletos
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/dashboard"
+                      className="inline-flex h-10 w-full items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                    >
+                      Ver cartelera
+                    </Link>
+                  )}
+                </CardFooter>
+              </Card>
+            );
+          })}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <section className="border-t border-zinc-200 bg-zinc-50 px-6 py-12 dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="mx-auto grid w-full max-w-5xl gap-6 md:grid-cols-3">
+          <Paso
+            titulo="1. Elige tu viaje"
+            descripcion="Explora la cartelera y selecciona origen, destino y horario."
+          />
+          <Paso
+            titulo="2. Reserva tu asiento"
+            descripcion="El asiento queda bloqueado 10 minutos mientras completas la compra."
+          />
+          <Paso
+            titulo="3. Confirma con identificación"
+            descripcion="Sube tu INE o identificación oficial (PDF, PNG o JPG) para finalizar."
+          />
         </div>
-      </main>
+      </section>
+    </div>
+  );
+}
+
+function Paso({
+  titulo,
+  descripcion,
+}: {
+  titulo: string;
+  descripcion: string;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <h3 className="font-semibold text-zinc-900 dark:text-zinc-50">{titulo}</h3>
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">{descripcion}</p>
     </div>
   );
 }

@@ -4,9 +4,11 @@ import { config as loadEnv } from 'dotenv';
 import { resolve } from 'path';
 import { AppController } from '@/app.controller';
 import { AppService } from '@/app.service';
+import { AuthModule } from '@/auth/auth.module';
 import { BoletosModule } from '@/boletos/boletos.module';
 import { RutasModule } from '@/rutas/rutas.module';
 import { StorageModule } from '@/storage/storage.module';
+import { UsuariosModule } from '@/usuarios/usuarios.module';
 import { ViajesModule } from '@/viajes/viajes.module';
 import {
   BoletoEntity,
@@ -30,10 +32,12 @@ loadEnv({ path: resolve(process.cwd(), '.env') });
       entities: [UsuarioEntity, RutaEntity, ViajeEntity, BoletoEntity],
       synchronize: process.env.NODE_ENV !== 'production',
     }),
+    AuthModule,
     StorageModule,
     RutasModule,
     ViajesModule,
     BoletosModule,
+    UsuariosModule,
   ],
   controllers: [AppController],
   providers: [AppService],
