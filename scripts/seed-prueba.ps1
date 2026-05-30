@@ -5,9 +5,11 @@
 # y cuentas de prueba con contraseñas hasheadas (bcrypt).
 
 $ErrorActionPreference = "Stop"
+$OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 
-Get-Content "$root\.env" | ForEach-Object {
+Get-Content "$root\.env" -Encoding UTF8 | ForEach-Object {
   if ($_ -match '^\s*([^#=]+)=(.*)$') {
     Set-Item -Path "env:$($matches[1].Trim())" -Value $matches[2].Trim()
   }
@@ -82,7 +84,23 @@ function Test-RutaProgramada([object[]]$viajes, [string]$origen, [string]$destin
   return $false
 }
 
+function Repair-RutasCorruptas {
+  $oAcute = [char]0x00F3
+  $aAcute = [char]0x00E1
+  $nuevoLeon = "Nuevo Le${oAcute}n"
+  $ciudadJuarez = "Ciudad Ju${aAcute}rez"
+
+  Write-Host "Corrigiendo nombres con acentos dañados..."
+  $sql = @"
+UPDATE rutas SET destino = '$ciudadJuarez' WHERE destino LIKE '%Ju?rez%';
+UPDATE rutas SET destino = '$nuevoLeon' WHERE destino LIKE '%Le%n' AND destino <> '$nuevoLeon' AND origen = 'Chihuahua';
+"@
+  docker exec -i chihuahuenos-postgres psql -U $env:POSTGRES_USER -d $env:POSTGRES_DB -c $sql | Out-Null
+}
+
 Wait-Backend
+
+Repair-RutasCorruptas
 
 Write-Host "Creando usuarios de prueba..."
 $hashPasajero = Get-BcryptHash "prueba123"
