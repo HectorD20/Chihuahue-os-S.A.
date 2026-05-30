@@ -109,7 +109,7 @@ export default function MapaAutobus({ boletos }: MapaAutobusProps) {
   };
 
   return (
-    <div className="flex w-full max-w-md flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-md flex-col gap-6">
       <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="mb-4 text-center text-sm font-medium text-zinc-500">
           Frente del autobús
@@ -149,7 +149,7 @@ export default function MapaAutobus({ boletos }: MapaAutobusProps) {
       </div>
 
       <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap gap-3 text-xs text-zinc-600 dark:text-zinc-400">
+        <div className="flex flex-wrap justify-center gap-3 text-xs text-zinc-600 dark:text-zinc-400">
           <Leyenda color="bg-green-500" label="Disponible" />
           <Leyenda color="bg-blue-500" label="Seleccionado" />
           <Leyenda color="bg-yellow-400" label="Reservado" />
@@ -157,7 +157,7 @@ export default function MapaAutobus({ boletos }: MapaAutobusProps) {
         </div>
 
         {asientoSeleccionado ? (
-          <p className="text-sm text-zinc-700 dark:text-zinc-300">
+          <p className="text-center text-sm text-zinc-700 dark:text-zinc-300">
             Asiento seleccionado:{' '}
             <span className="font-semibold">
               {asientoSeleccionado.numero_asiento}
@@ -166,7 +166,7 @@ export default function MapaAutobus({ boletos }: MapaAutobusProps) {
         ) : null}
 
         {tokenReserva ? (
-          <p className="text-sm text-green-700 dark:text-green-400">
+          <p className="text-center text-sm text-green-700 dark:text-green-400">
             Reserva activa. Token:{' '}
             <span className="font-mono font-semibold">{tokenReserva}</span>
           </p>

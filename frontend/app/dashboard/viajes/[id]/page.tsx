@@ -18,8 +18,8 @@ export default async function ViajePage({
   const boletos = (await response.json()) as Boleto[];
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-10">
-      <header>
+    <div className="mx-auto flex w-full max-w-4xl flex-col items-center gap-8 px-6 py-10">
+      <header className="w-full text-center">
         <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
           Selección de Asientos - Viaje #{id}
         </h1>
